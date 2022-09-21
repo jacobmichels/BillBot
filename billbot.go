@@ -46,3 +46,8 @@ type EmailParser interface {
 type GmailClient interface {
 	PollBillEmails(context.Context) ([]Bill, error)
 }
+
+type RedisClient interface {
+	EmailSeen(context.Context, string) (bool, error)
+	SetEmailSeen(context.Context, string) error
+}

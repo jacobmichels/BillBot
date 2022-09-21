@@ -6,6 +6,7 @@ require (
 	github.com/antchfx/htmlquery v1.2.5
 	github.com/bojanz/currency v1.0.4
 	github.com/bwmarrin/discordgo v0.26.1
+	github.com/go-redis/redis/v8 v8.11.5
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.0
@@ -16,8 +17,10 @@ require (
 require (
 	cloud.google.com/go/compute v1.6.1 // indirect
 	github.com/antchfx/xpath v1.2.1 // indirect
+	github.com/cespare/xxhash/v2 v2.1.2 // indirect
 	github.com/cockroachdb/apd/v3 v3.1.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.2 // indirect

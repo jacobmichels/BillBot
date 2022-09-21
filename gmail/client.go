@@ -19,12 +19,12 @@ import (
 )
 
 type Client struct {
-	gmailService   *gmail.Service
-	filters        []billbot.EmailFilter
-	seenMessageIDs map[string]struct{}
+	gmailService *gmail.Service
+	filters      []billbot.EmailFilter
+	redis        billbot.RedisClient
 }
 
-func NewGmailClient(ctx context.Context, credentialsFilePath, refreshToken string, filters []billbot.EmailFilter) (*Client, error) {
+func NewGmailClient(ctx context.Context, redis billbot.RedisClient, credentialsFilePath, refreshToken string, filters []billbot.EmailFilter) (*Client, error) {
 	b, err := os.ReadFile(credentialsFilePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read credentials file: %w", err)
@@ -44,7 +44,7 @@ func NewGmailClient(ctx context.Context, credentialsFilePath, refreshToken strin
 		return nil, fmt.Errorf("failed to create gmail service: %w", err)
 	}
 
-	return &Client{service, filters, make(map[string]struct{})}, nil
+	return &Client{service, filters, redis}, nil
 }
 
 func createHttpClient(oauthConfig *oauth2.Config, refreshToken string) (*http.Client, error) {
@@ -65,8 +65,16 @@ func (c *Client) PollBillEmails(ctx context.Context) ([]billbot.Bill, error) {
 	var results []billbot.Bill
 	for _, message := range listResponse.Messages {
 		// if we haven't seen this message...
-		if _, ok := c.seenMessageIDs[message.Id]; !ok {
-			c.seenMessageIDs[message.Id] = struct{}{}
+		seen, err := c.redis.EmailSeen(ctx, message.Id)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check if email seen: %w", err)
+		}
+
+		if !seen {
+			err = c.redis.SetEmailSeen(ctx, message.Id)
+			if err != nil {
+				return nil, fmt.Errorf("failed to mark email as seen")
+			}
 
 			getResponse, err := c.gmailService.Users.Messages.Get("me", message.Id).Format("RAW").Do()
 			if err != nil {
@@ -86,6 +94,8 @@ func (c *Client) PollBillEmails(ctx context.Context) ([]billbot.Bill, error) {
 
 			subject := msg.Header.Get("Subject")
 			from := msg.Header.Get("From")
+
+			log.Info().Str("Subject", subject).Str("From", from).Msg("Processing unseen message")
 
 			for _, filter := range c.filters {
 				if strings.Contains(subject, filter.Subject) && strings.Contains(from, filter.From) {

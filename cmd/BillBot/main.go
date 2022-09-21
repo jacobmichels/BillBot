@@ -13,6 +13,7 @@ import (
 	"github.com/jacobmichels/BillBot/gmail"
 	"github.com/jacobmichels/BillBot/publisher"
 	"github.com/jacobmichels/BillBot/receiver"
+	"github.com/jacobmichels/BillBot/redis"
 	"github.com/jacobmichels/BillBot/sender"
 	"github.com/jacobmichels/BillBot/subscriber"
 	"github.com/rs/zerolog"
@@ -23,11 +24,12 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
 
-	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-
 	cfg, ok, err := ReadConfig()
 	if err != nil {
 		log.Panic().Err(err).Msg("failed to read config")
+	}
+	if cfg.Log.Pretty {
+		log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 	}
 	if !ok {
 		log.Info().Msg("No config file found, using env and defaults")
@@ -51,7 +53,14 @@ func main() {
 		},
 	}
 
-	gmailClient, err := gmail.NewGmailClient(ctx, cfg.Gmail.CredentialsFilePath, cfg.Gmail.RefreshToken, filters)
+	redisClient := redis.NewClient(cfg.Redis.Addr, cfg.Redis.Username, cfg.Redis.Password)
+	value, err := redisClient.Ping(ctx)
+	if err != nil {
+		log.Fatal().Err(err).Msg("failed to ping redis")
+	}
+	log.Info().Str("response", value).Msg("redis pinged")
+
+	gmailClient, err := gmail.NewGmailClient(ctx, redisClient, cfg.Gmail.CredentialsFilePath, cfg.Gmail.RefreshToken, filters)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create gmail client")
 	}

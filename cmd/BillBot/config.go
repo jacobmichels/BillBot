@@ -20,6 +20,11 @@ type Config struct {
 		CredentialsFilePath string `mapstructure:"credentials_file"`
 		RefreshToken        string `mapstructure:"refresh_token"`
 	}
+	Redis struct {
+		Addr     string `mapstructure:"addr"`
+		Username string `mapstructure:"username"`
+		Password string `mapstructure:"password"`
+	}
 }
 
 func ReadConfig() (Config, bool, error) {
@@ -33,6 +38,9 @@ func ReadConfig() (Config, bool, error) {
 	viper.SetDefault("log.pretty", "")
 	viper.SetDefault("gmail.credentials_file", "")
 	viper.SetDefault("gmail.refresh_token", "")
+	viper.SetDefault("redis.addr", "")
+	viper.SetDefault("redis.username", "")
+	viper.SetDefault("redis.password", "")
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
