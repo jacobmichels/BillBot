@@ -46,12 +46,6 @@ func main() {
 			Subject:     "Your Rogers bill is now available",
 			EmailParser: &formats.RogersEmailParser{},
 		},
-		{
-			Name:        "Test",
-			From:        "jacob.michels2025@gmail.com",
-			Subject:     "Test",
-			EmailParser: &formats.TestEmailParser{},
-		},
 	}
 
 	gmailClient, err := gmail.NewGmailClient(ctx, cfg.Gmail.CredentialsFilePath, cfg.Gmail.RefreshToken, filters)
