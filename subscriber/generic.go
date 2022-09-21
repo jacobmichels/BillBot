@@ -36,7 +36,6 @@ func (s *BillSubscriber) Start(ctx context.Context) error {
 
 			select {
 			case <-ctx.Done():
-				log.Info().Msg("subscriber shut down")
 				return
 			case <-time.After(time.Minute):
 				// continue to next iteration
@@ -50,6 +49,7 @@ func (s *BillSubscriber) Start(ctx context.Context) error {
 		case bill := <-receiveChan:
 			s.bills <- bill
 		case <-ctx.Done():
+			log.Info().Msg("Subscriber shut down")
 			return nil
 		}
 	}

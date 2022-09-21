@@ -44,5 +44,5 @@ type EmailParser interface {
 }
 
 type GmailClient interface {
-	PollBillEmails() ([]Bill, error)
+	PollBillEmails(context.Context) ([]Bill, error)
 }

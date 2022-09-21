@@ -16,7 +16,7 @@ func NewGmailReceiver(client billbot.GmailClient) *GmailReceiver {
 }
 
 func (gmr *GmailReceiver) ReceiveBills(ctx context.Context) ([]billbot.Bill, error) {
-	bills, err := gmr.client.PollBillEmails()
+	bills, err := gmr.client.PollBillEmails(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to list bill emails: %w", err)
 	}

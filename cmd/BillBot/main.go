@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/signal"
+	"sync"
 
 	billbot "github.com/jacobmichels/BillBot"
 	"github.com/jacobmichels/BillBot/discord"
@@ -18,7 +20,8 @@ import (
 )
 
 func main() {
-	ctx := context.Background()
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
 
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
 
@@ -75,8 +78,11 @@ func main() {
 
 func run(ctx context.Context, sub billbot.BackgroundService, pub billbot.BackgroundService) error {
 	errChan := make(chan error)
+	var wg sync.WaitGroup
+	wg.Add(2)
 
 	go func() {
+		defer wg.Done()
 		log.Info().Msg("Starting publisher")
 		if err := pub.Start(ctx); err != nil {
 			errChan <- fmt.Errorf("publisher failed: %w", err)
@@ -84,6 +90,7 @@ func run(ctx context.Context, sub billbot.BackgroundService, pub billbot.Backgro
 	}()
 
 	go func() {
+		defer wg.Done()
 		log.Info().Msg("Starting subscriber")
 		if err := sub.Start(ctx); err != nil {
 			errChan <- fmt.Errorf("subscriber failed :%w", err)
@@ -92,8 +99,11 @@ func run(ctx context.Context, sub billbot.BackgroundService, pub billbot.Backgro
 
 	select {
 	case <-ctx.Done():
+		// wait for the publisher and subscriber to finish
+		wg.Wait()
 		return nil
 	case err := <-errChan:
+		wg.Wait()
 		return err
 	}
 }

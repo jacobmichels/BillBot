@@ -56,7 +56,7 @@ func createHttpClient(oauthConfig *oauth2.Config, refreshToken string) (*http.Cl
 	return oauthConfig.Client(context.Background(), token), nil
 }
 
-func (c *Client) PollBillEmails() ([]billbot.Bill, error) {
+func (c *Client) PollBillEmails(ctx context.Context) ([]billbot.Bill, error) {
 	listResponse, err := c.gmailService.Users.Messages.List("me").MaxResults(10).Do()
 	if err != nil {
 		return nil, fmt.Errorf("failed to list emails: %w", err)
