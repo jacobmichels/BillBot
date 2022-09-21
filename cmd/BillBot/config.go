@@ -28,6 +28,11 @@ func ReadConfig() (Config, bool, error) {
 	viper.SetConfigType("yaml")
 
 	viper.SetDefault("discord.token", "")
+	viper.SetDefault("discord.channel_id", "")
+	viper.SetDefault("discord.service_owner_id", "")
+	viper.SetDefault("log.pretty", "")
+	viper.SetDefault("gmail.credentials_file", "")
+	viper.SetDefault("gmail.refresh_token", "")
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
