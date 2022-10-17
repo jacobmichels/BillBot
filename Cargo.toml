@@ -1,8 +1,13 @@
 [package]
-name = "BillBot"
+name = "billbot"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+anyhow = "1.0.65"
+env_logger = "0.9.1"
+log = "0.4.17"
+serenity = { version = "0.11.5", default-features = false, features = ["client", "gateway", "rustls_backend", "model"] }
+tokio = { version = "1.21.2", features = ["full"] }
