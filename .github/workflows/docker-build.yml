@@ -24,3 +24,4 @@ jobs:
         with:
           push: true
           tags: jacobmichels/billbot:v2
+          platforms: linux/amd64,linux/arm64
