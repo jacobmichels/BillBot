@@ -13,11 +13,39 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
             opt.kind(CommandOptionType::SubCommand)
                 .name("create")
                 .description("Create a new bill, which billbot will post to the server")
-        })
-        .create_option(|opt| {
-            opt.kind(CommandOptionType::SubCommand)
-                .name("paid")
-                .description("Mark an existing bill as paid")
+            // .create_sub_option(|opt| {
+            //     opt.kind(CommandOptionType::User)
+            //         .name("payer1")
+            //         .description(
+            //             "Person 1 who will receive the bill (at least one payer required)",
+            //         )
+            //         .required(true)
+            // })
+            // .create_sub_option(|opt| {
+            //     opt.kind(CommandOptionType::User)
+            //         .name("payer2")
+            //         .description("Person 2 who will receive the bill")
+            // })
+            // .create_sub_option(|opt| {
+            //     opt.kind(CommandOptionType::User)
+            //         .name("payer3")
+            //         .description("Person 3 who will receive the bill")
+            // })
+            // .create_sub_option(|opt| {
+            //     opt.kind(CommandOptionType::User)
+            //         .name("payer4")
+            //         .description("Person 4 who will receive the bill")
+            // })
+            // .create_sub_option(|opt| {
+            //     opt.kind(CommandOptionType::User)
+            //         .name("payer5")
+            //         .description("Person 5 who will receive the bill")
+            // })
+            // .create_sub_option(|opt| {
+            //     opt.kind(CommandOptionType::User)
+            //         .name("payer6")
+            //         .description("Person 6 who will receive the bill")
+            // })
         })
 }
 
@@ -53,6 +81,15 @@ pub async fn respond(ctx: &Context, cmd: &ApplicationCommandInteraction) -> anyh
                                 .label("Payment method")
                                 .style(Paragraph)
                                 .placeholder("Ex. etransfer jacob.michels2025@gmail.com")
+                        })
+                    });
+                    cmp.create_action_row(|row| {
+                        row.create_input_text(|input| {
+                            input
+                                .custom_id("payers")
+                                .label("Payers")
+                                .style(Paragraph)
+                                .placeholder("Ex. Jacob, Joel, Justin, ... (uses discord nicknames for account linking)")
                         })
                     })
                 })
