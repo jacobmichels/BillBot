@@ -4,7 +4,7 @@ A discord bot for easily sharing bills with your roommates.
 
 ## Usage
 
-`RUST_LOG=billbot=info cargo run`
+`RUST_LOG=billbot=info BILLBOT_GUILDS=<csv guild ids> cargo run`
 
 ## Features TODO
 
