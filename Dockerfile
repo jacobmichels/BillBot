@@ -1,21 +1,16 @@
-FROM golang:1.19.1-alpine3.16 AS builder
+FROM rust:buster AS builder
 
 WORKDIR /app
 
-COPY go.mod .
-COPY go.mod .
-
-RUN go mod download
-
 COPY . .
 
-RUN go build -o /usr/bin/billbot ./cmd/BillBot
+RUN cargo build --release
 
-FROM alpine:3.16.2
+FROM debian:buster-slim
 
-COPY --from=builder /usr/bin/billbot /usr/bin/billbot
+COPY --from=builder /app/target/release/billbot /app/billbot
 
-RUN addgroup -S appgroup && adduser -S appuser -G appgroup
-USER appuser
+RUN adduser billbot
+USER billbot:billbot
 
-ENTRYPOINT [ "/usr/bin/billbot" ]
+ENTRYPOINT ["/app/billbot"]

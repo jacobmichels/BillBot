@@ -1,9 +1,13 @@
-# BillBot
+# BillBot V2
 
-Let your roommates know when they owe you bill money, automagically!
+A discord bot for easily sharing bills with your roommates.
 
-## TODO
+## Usage
 
-- finish the readme
-- app is stateful currently, it maintains a list of emails it's seen. stateless would be nice
-- email filters could be a plugin systems
+`RUST_LOG=billbot=info BILLBOT_GUILDS=<csv guild ids> cargo run`
+
+## Features TODO
+
+- slash command for posting a bill
+  - a bill posting needs to include a monetary amount, a descriptive name, and a list of people splitting the bill
+  - ability to mark bill as paid
