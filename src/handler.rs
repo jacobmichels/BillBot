@@ -1,6 +1,6 @@
 use std::{collections::HashMap, process::exit};
 
-use log::{error, info};
+use log::{error, info, warn};
 use serenity::{
     async_trait,
     model::prelude::{
@@ -101,9 +101,29 @@ impl EventHandler for Handler {
                 );
             }
             Interaction::ModalSubmit(submission) => {
+                info!("received modal submit interaction");
+
+                let guild_id = submission.guild_id;
+                if guild_id.is_none() {
+                    error!("no guild id for modal submit, aborting response");
+                    return;
+                }
+
+                let guild_id = guild_id.unwrap();
+
                 let mut title = String::from("");
                 let mut amount = String::from("");
                 let mut method = String::from("");
+                let submitter;
+
+                let submitter_nick = submission.user.nick_in(&ctx, guild_id).await;
+
+                if let Some(nick) = submitter_nick {
+                    submitter = nick
+                } else {
+                    warn!("submitter has no nickname, using username");
+                    submitter = submission.user.name.clone();
+                }
 
                 for row in &submission.data.components {
                     for component in &row.components {
@@ -123,10 +143,15 @@ impl EventHandler for Handler {
                     }
                 }
 
+                info!(
+                    "submission values, title: {}, amount: {}, method: {}, submitter: {}",
+                    title, amount, method, submitter
+                );
+
                 if let Err(why) = submission
                     .create_interaction_response(&ctx.http, |res| {
                         res.kind(ChannelMessageWithSource)
-                            .interaction_response_data(|msg| msg.content(format!("**🚨 AYO NEW BILL AVAILABLE 🚨**\n >>> Title: {}\nTotal amount: {}\nPayment method: {}\n\n *Thanks lads ❤️*", title, amount, method)))
+                            .interaction_response_data(|msg| msg.content(format!("**🚨 AYO NEW BILL AVAILABLE 🚨**\n >>> Title: {}\nTotal amount: {}\nBill created by: {}\nPayment method: {}\n\n *Thanks lads ❤️*", title, amount, submitter, method)))
                     })
                     .await
                 {
