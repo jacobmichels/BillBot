@@ -2,3 +2,4 @@ Dockerfile
 .gitignore
 target
 README.md
+DS_Store
