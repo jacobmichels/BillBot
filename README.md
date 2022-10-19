@@ -8,9 +8,10 @@ A discord bot for easily sharing bills with your roommates.
 
 ## Features TODO
 
-- slash command for posting a bill
-  - a bill posting needs to include a monetary amount, a descriptive name, and a list of people splitting the bill
-  - ability to mark bill as paid
+- ability to mark bill as paid
+- only signal handled is SIGINT, need to handle others like SIGTERM for cleanup of slash commands
+  - could use a command line flag or environment variable as a signal to BillBot to clean up slash commands then exit
+- clean up the code, it's a bit of a mess
 
 ## Challenges
 
