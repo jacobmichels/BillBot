@@ -20,10 +20,16 @@ async fn main() -> anyhow::Result<()> {
         guild_ids.remove(0);
     }
 
-    let mut client = Client::builder(token, GatewayIntents::GUILD_MEMBERS)
-        .event_handler(Handler::new(guild_ids))
-        .await
-        .context("failed to build serenity client")?;
+    let mut client = Client::builder(
+        token,
+        GatewayIntents::GUILD_MEMBERS
+            | GatewayIntents::GUILDS
+            | GatewayIntents::GUILD_MESSAGES
+            | GatewayIntents::GUILD_PRESENCES,
+    )
+    .event_handler(Handler::new(guild_ids))
+    .await
+    .context("failed to build serenity client")?;
 
     info!("starting client");
     client.start().await?;

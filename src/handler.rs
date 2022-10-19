@@ -144,15 +144,49 @@ impl EventHandler for Handler {
                                     }
 
                                     let guild_id = submission.guild_id.unwrap();
-                                    let member_vec = guild_id.members(&ctx.http, None, None).await;
-                                    if let Err(why) = member_vec {
+                                    let guild_members =
+                                        guild_id.members(&ctx.http, None, None).await;
+                                    if let Err(why) = guild_members {
                                         error!("failed to get members for guild, aborting response: {}", why);
                                         return;
                                     }
-                                    let member_vec = member_vec.unwrap();
-                                    let mut members = HashMap::with_capacity(member_vec.len());
+                                    let guild_members = guild_members.unwrap();
 
-                                    for member in member_vec {
+                                    let mut channel_members: Vec<Member> =
+                                        Vec::with_capacity(guild_members.len());
+
+                                    let channel_id = submission.channel_id;
+                                    let channels = guild_id.channels(&ctx.http).await;
+                                    if let Err(why) = channels {
+                                        error!("failed to list channels in guild: {}", why);
+                                        return;
+                                    }
+
+                                    let channels = channels.unwrap();
+                                    let channel = channels.get(&channel_id);
+                                    if channel.is_none() {
+                                        error!("submission channel does not exist in guild",);
+                                        return;
+                                    }
+
+                                    let channel = channel.unwrap();
+
+                                    for guild_member in &guild_members {
+                                        let perms = channel
+                                            .permissions_for_user(&ctx, guild_member.user.id);
+                                        if let Err(why) = perms {
+                                            error!("failed to get perms for a user: {}", why);
+                                            return;
+                                        }
+
+                                        if perms.unwrap().view_channel() {
+                                            channel_members.push(guild_member.clone());
+                                        }
+                                    }
+
+                                    let mut members = HashMap::with_capacity(channel_members.len());
+
+                                    for member in channel_members {
                                         let name = member
                                             .nick
                                             .clone()
