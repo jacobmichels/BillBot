@@ -1,6 +1,11 @@
 use std::{collections::HashMap, process::exit};
 
 use log::{error, info, warn};
+use rust_decimal::prelude::*;
+use rusty_money::{
+    iso::{self},
+    Money,
+};
 use serenity::{
     async_trait,
     model::prelude::{
@@ -107,7 +112,7 @@ impl EventHandler for Handler {
                 let guild_id = guild_id.unwrap();
 
                 let mut title = String::from("");
-                let mut amount = String::from("");
+                let mut amount = Money::from_major(10, iso::CAD);
                 let mut method = String::from("");
                 let mut payers: Vec<Member> = Vec::with_capacity(10);
                 let submitter;
@@ -126,7 +131,33 @@ impl EventHandler for Handler {
                         match component {
                             ActionRowComponent::InputText(data) => match data.custom_id.as_str() {
                                 "name" => title = data.value.clone().trim().to_owned(),
-                                "amount" => amount = data.value.clone().trim().to_owned(),
+                                "amount" => {
+                                    let amount_str = data.value.trim();
+                                    let cad = Money::from_str(amount_str, iso::CAD);
+                                    if let Err(why) = cad {
+                                        error!("failed to convert {} to CAD: {}", amount_str, why);
+                                        if let Err(why) = submission
+                                            .create_interaction_response(&ctx.http, |res| {
+                                                res.kind(ChannelMessageWithSource)
+                                                    .interaction_response_data(|msg| {
+                                                        msg.ephemeral(true).content(format!(
+                                                            "{} is not a valid CAD amount",
+                                                            amount_str
+                                                        ))
+                                                    })
+                                            })
+                                            .await
+                                        {
+                                            error!(
+                                                "failed to send early interaction response: {}",
+                                                why
+                                            );
+                                            return;
+                                        }
+                                        return;
+                                    }
+                                    amount = cad.unwrap();
+                                }
                                 "method" => method = data.value.clone().trim().to_owned(),
                                 "payers" => {
                                     let payer_string = data.value.clone();
@@ -234,9 +265,17 @@ impl EventHandler for Handler {
                     }
                 }
 
+                let each_owes = Money::from_decimal(
+                    amount
+                        .amount()
+                        .checked_div(Decimal::new(payers.len().try_into().unwrap(), 0))
+                        .unwrap(),
+                    iso::CAD,
+                );
+
                 info!(
-                    "submission values, title: {}, amount: {}, method: {}, submitter: {}, payer count: {}",
-                    title, amount, method, submitter, payers.len()
+                    "submission values, title: {}, amount: {}, method: {}, submitter: {}, payer count: {} each pays: {}",
+                    title, amount.to_string(), method, submitter, payers.len(), each_owes
                 );
 
                 let payer_mentions = create_payer_mention_string(&payers);
@@ -244,7 +283,7 @@ impl EventHandler for Handler {
                 if let Err(why) = submission
                     .create_interaction_response(&ctx.http, |res| {
                         res.kind(ChannelMessageWithSource)
-                            .interaction_response_data(|msg| msg.content(format!("**🚨 AYO NEW BILL AVAILABLE 🚨**\n >>> Title: {}\nTotal amount: {}\nBill created by: {}\nPayment method: {}\nPayers: {}\n\n *Thanks lads ❤️*", title, amount, submitter, method, payer_mentions)))
+                            .interaction_response_data(|msg| msg.content(format!("**🚨 AYO NEW BILL AVAILABLE 🚨**\n >>> Title: {}\nTotal amount: {}\nBill created by: {}\nPayment method: {}\nPayers: {}\nEach pays: {}\n\n *Thanks lads ❤️*", title, amount, submitter, method, payer_mentions, each_owes)))
                     })
                     .await
                 {
