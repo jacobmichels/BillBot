@@ -12,4 +12,4 @@ log = "0.4.17"
 rust_decimal = "1.26.1"
 rusty-money = "0.4.1"
 serenity = { version = "0.11.5", default-features = false, features = ["client", "gateway", "rustls_backend", "model", "utils", "cache"] }
-tokio = { version = "1.21.2", features = ["full"] }
+tokio = { version = "1.24.2", features = ["full"] }
